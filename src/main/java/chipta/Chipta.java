@@ -1,119 +1,107 @@
 package chipta;
 
-import org.jsoup.Connection;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Chipta extends TelegramLongPollingBot {
-    // fromWhere
-    StringBuilder fromWhere = new StringBuilder();
-    //toWhere
-    StringBuilder toWhere = new StringBuilder();
+    private static final String botToken = "5440974161:AAE5rkmtBTCKU9vY6KWvL2PAGlbVED1t-Fc";
+    private static final String botUserName = "thechiptabot";
 
-    //when
-    StringBuilder when = new StringBuilder();
-
-    String[] cities = new String[]{"nukus", "buxoro", "urganch", "hazarasp", "samarqand", "toshkent", "navoiy", "andijon", "qarshi", "jizzax", "termiz", "xiva", "guliston"};
-
-    // searching correct line
-    public boolean correctLine(String cityName) {
-        for (String city : cities) {
-            if (cityName.toLowerCase().equals(city)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void connect() {
-        Connection.Response response = null;
-        try {
-            response = Jsoup.connect("https://chipta.railway.uz/ru/home")
-                    .data("search--trains__input--from", fromWhere.toString(), "search--trains__input--to", toWhere.toString())
-                    .method(Connection.Method.POST)
-                    .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(response);
-
-    }
-
+    //controller of steps
+    String STEP = "START";
 
     @Override
     public String getBotUsername() {
-        return "thechiptabot";
+        return botUserName;
     }
 
     @Override
     public String getBotToken() {
-        return "5440974161:AAE5rkmtBTCKU9vY6KWvL2PAGlbVED1t-Fc";
+        return botToken;
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        Message message = update.getMessage();
-        SendMessage sendMessage = new SendMessage();
-        String text = message.getText();
-        connect();
+        SendMessage message = new SendMessage();
+        Lines lines = new Lines();
+        String message_text = update.getMessage().getText();
+        long chat_id = update.getMessage().getChatId();
+        StringBuilder fromWhere = new StringBuilder();
+        StringBuilder toWhere = new StringBuilder();
+
         //staring bot
-        if (update.hasMessage() && message.hasText() && text.equals("/start")) {
-            sendMessage.setText("Manzilingizni kiriting...");
-            sendMessage.setChatId(message.getChatId());
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            
+            //on /start
+            if (message_text.equals("/start")) {
+                message.setChatId(chat_id);
+                message.setText("Assalomu aleykum " + update.getMessage().getFrom().getFirstName() + System.lineSeparator() + "Asosiy menu.");
+
+                // Create ReplyKeyboardMarkup object
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+                keyboardMarkup.setResizeKeyboard(true);
+                // Create the keyboard (list of keyboard rows)
+                List<KeyboardRow> keyboard = new ArrayList<>();
+
+                // Create a keyboard row
+                KeyboardRow row = new KeyboardRow();
+
+                // Set each button, you can also use KeyboardButton objects if you need something else than text
+                row.add("Chipta izlash. 🔎");
+                row.add("Sozlamalar. ⚙️");
+
+                // Add the first row to the keyboard
+                keyboard.add(row);
+
+                // Set the keyboard to the markup
+                keyboardMarkup.setKeyboard(keyboard);
+
+                // Add it to the message
+                message.setReplyMarkup(keyboardMarkup);
+
+                STEP = Steps.START;
             }
+
+            //on click search ticket
+            if (message_text.equals("Chipta izlash. 🔎")) {
+                message.setChatId(chat_id);
+                message.setText("Yo'nalishni kiriting. Qayerdan?\n");
+
+                STEP = Steps.CHOOSE_TRAIN_FROM;
+            }
+
+            if (lines.correctLineFrom(message_text) && STEP.equals("CHOOSE_TRAIN_FROM")) {
+                fromWhere.append(message_text);
+                System.out.println(fromWhere);
+            }
+
+
+
+            //on click settings
+            if (message_text.equals("Sozlamalar. ⚙️")) {
+                message.setChatId(chat_id);
+                message.setText("Malumot topilmadi.");
+                STEP = Steps.SETTINGS;
+            }
+
+
         }
 
-        //choosing line fromWhere
-        if (update.hasMessage() && correctLine(text)) {
-            fromWhere = new StringBuilder(message.getText());
-            sendMessage.setText("Jo'nab ketish nuqtasi: " + fromWhere.toString().toUpperCase() + System.lineSeparator() + "Borish manzilni kiriting.");
-            sendMessage.setChatId(message.getChatId());
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
 
-        // choosing line toWhere
-        else if (update.hasMessage() && correctLine(text) && !fromWhere.toString().equals(text)) {
-            toWhere = new StringBuilder(message.getText());
-            sendMessage.setText("Borish manzilingiz: " + toWhere.toString().toUpperCase());
-            sendMessage.setChatId(message.getChatId());
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-
-
-
-
-        // incorrect line
-        if (update.hasMessage() && !correctLine(text) && !text.equals("/start")) {
-            sendMessage.setText("Mavjud emas.");
-            sendMessage.setChatId(message.getChatId());
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException();
-            }
-        }
-                }
-                }
-
+    }
+}
 
 
 
