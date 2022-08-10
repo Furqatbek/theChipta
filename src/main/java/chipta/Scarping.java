@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import java.util.Map;
 
 public class Scarping  {
-    public static void scarping(String fromWhere, String toWhere) throws Exception {
+    public void webScarping(String fromWhere, String toWhere) throws Exception {
 
         //connecting to railway website and inserting data
         Connection.Response response = Jsoup
@@ -22,5 +22,7 @@ public class Scarping  {
         Document document = Jsoup.connect("https://chipta.railway.uz/ru/pages/trains-page")
                 .cookies(railWayCookies)
                 .get();
+
+        System.out.println(document);
     }
 }

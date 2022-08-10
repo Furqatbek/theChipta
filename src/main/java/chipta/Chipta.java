@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Chipta extends TelegramLongPollingBot {
     private static final String botToken = "5440974161:AAE5rkmtBTCKU9vY6KWvL2PAGlbVED1t-Fc";
@@ -29,6 +30,7 @@ public class Chipta extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        Scarping scarping = new Scarping();
         SendMessage message = new SendMessage();
         Lines lines = new Lines();
         String message_text = update.getMessage().getText();
@@ -72,17 +74,24 @@ public class Chipta extends TelegramLongPollingBot {
             //on click search ticket
             if (message_text.equals("Chipta izlash. 🔎")) {
                 message.setChatId(chat_id);
-                message.setText("Yo'nalishni kiriting. Qayerdan?\n");
-
+                message.setText("Yo'nalishni kiriting. Qayerdan?\n" + lines.lines());
                 STEP = Steps.CHOOSE_TRAIN_FROM;
             }
 
+            //choose where to go from
             if (lines.correctLineFrom(message_text) && STEP.equals("CHOOSE_TRAIN_FROM")) {
                 fromWhere.append(message_text);
-                System.out.println(fromWhere);
+                message.setChatId(chat_id);
+                message.setText("Jo'nab ketish manzili: " + fromWhere.toString().toUpperCase(Locale.ROOT) + System.lineSeparator() + "Borish manzilini kiriting.");
+                STEP = Steps.CHOOSE_TRAIN_TO;
             }
 
-
+            //choose where to go to
+            if (lines.correctLineFrom(message_text) && STEP.equals("CHOOSE_TRAIN_TO")) {
+                toWhere.append(message_text);
+                message.setChatId(chat_id);
+                message.setText("Borish manzilingiz: " + toWhere.toString().toUpperCase());
+            }
 
             //on click settings
             if (message_text.equals("Sozlamalar. ⚙️")) {
@@ -91,7 +100,6 @@ public class Chipta extends TelegramLongPollingBot {
                 STEP = Steps.SETTINGS;
             }
 
-
         }
 
         try {
@@ -99,8 +107,9 @@ public class Chipta extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-
     }
+
+
 }
 
 

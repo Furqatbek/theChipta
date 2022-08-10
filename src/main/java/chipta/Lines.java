@@ -14,10 +14,12 @@ public class Lines {
         return false;
 }
 
-public void cities() {
-        for (int i=0; i< trainLines.length; i++) {
-            System.out.println(trainLines[i].toUpperCase());
-        }
-}
 
+public String lines() {
+    StringBuilder lines = new StringBuilder();
+    for (int i=0; i<trainLines.length; i++) {
+        lines.append(i + "." + " " + trainLines[i].toUpperCase() + System.lineSeparator());
+    }
+    return lines.toString();
+}
 }
