@@ -2,8 +2,11 @@ package chipta;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Contact;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -15,61 +18,71 @@ public class Chipta extends TelegramLongPollingBot {
     private static final String botToken = "5440974161:AAE5rkmtBTCKU9vY6KWvL2PAGlbVED1t-Fc";
     private static final String botUserName = "thechiptabot";
 
+    //get username
+    private StringBuilder userName = new StringBuilder();
+
+    //get user phone number
+    private StringBuilder phoneNumber = new StringBuilder();
+
     //controller of steps
     String STEP = "START";
 
     @Override
-    public String getBotUsername() {
-        return botUserName;
-    }
-
-    @Override
-    public String getBotToken() {
-        return botToken;
-    }
-
-    @Override
     public void onUpdateReceived(Update update) {
-        Scarping scarping = new Scarping();
+
         SendMessage message = new SendMessage();
         Lines lines = new Lines();
+        KeyboardButton keyboardButton = new KeyboardButton();
+        Message msg = new Message();
+        Contact contact = new Contact();
+
+        //user message
         String message_text = update.getMessage().getText();
+
+        //user id
         long chat_id = update.getMessage().getChatId();
+
+        //user's A and B
         StringBuilder fromWhere = new StringBuilder();
         StringBuilder toWhere = new StringBuilder();
 
         //staring bot
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            
+        if (update.hasMessage()) {
+
             //on /start
             if (message_text.equals("/start")) {
                 message.setChatId(chat_id);
-                message.setText("Assalomu aleykum " + update.getMessage().getFrom().getFirstName() + System.lineSeparator() + "Asosiy menu.");
+                message.setText("Assalomu aleykum " + update.getMessage().getFrom().getFirstName() + System.lineSeparator() + "Botdan foydalanish uchun iltimos ro'yhatdan o'ting.\n" + "Telefon raqamingizni yuboring");
 
-                // Create ReplyKeyboardMarkup object
-                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-                keyboardMarkup.setResizeKeyboard(true);
-                // Create the keyboard (list of keyboard rows)
+                // create keyboard
+                ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+                message.setReplyMarkup(replyKeyboardMarkup);
+                replyKeyboardMarkup.setSelective(true);
+                replyKeyboardMarkup.setResizeKeyboard(true);
+                replyKeyboardMarkup.setOneTimeKeyboard(true);
+
+                // new list
                 List<KeyboardRow> keyboard = new ArrayList<>();
 
-                // Create a keyboard row
-                KeyboardRow row = new KeyboardRow();
+                // first keyboard line
+                KeyboardRow keyboardFirstRow = new KeyboardRow();
+                keyboardButton.setText("Raqamni yuborish 📞");
+                keyboardButton.setRequestContact(true);
+                keyboardFirstRow.add(keyboardButton);
 
-                // Set each button, you can also use KeyboardButton objects if you need something else than text
-                row.add("Chipta izlash. 🔎");
-                row.add("Sozlamalar. ⚙️");
+                // add array to list
+                keyboard.add(keyboardFirstRow);
 
-                // Add the first row to the keyboard
-                keyboard.add(row);
+                // add list to our keyboard
+                replyKeyboardMarkup.setKeyboard(keyboard);
 
-                // Set the keyboard to the markup
-                keyboardMarkup.setKeyboard(keyboard);
+                if (update.hasMessage()) {
+                    System.out.println(update.getMessage().getContact());
+                }
 
-                // Add it to the message
-                message.setReplyMarkup(keyboardMarkup);
-
-                STEP = Steps.START;
             }
+
+
 
             //on click search ticket
             if (message_text.equals("Chipta izlash. 🔎")) {
@@ -102,6 +115,7 @@ public class Chipta extends TelegramLongPollingBot {
 
         }
 
+
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -110,6 +124,31 @@ public class Chipta extends TelegramLongPollingBot {
     }
 
 
+    public StringBuilder getUserName() {
+        return userName;
+    }
+
+    public void setUserName(StringBuilder userName) {
+        this.userName = userName;
+    }
+
+    public StringBuilder getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(StringBuilder phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    @Override
+    public String getBotUsername() {
+        return botUserName;
+    }
+
+    @Override
+    public String getBotToken() {
+        return botToken;
+    }
 }
 
 

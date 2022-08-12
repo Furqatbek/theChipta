@@ -10,6 +10,8 @@ public class Main {
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(new Chipta());
+            Database database = new Database();
+            database.connectDb();
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

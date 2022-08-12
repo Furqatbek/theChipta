@@ -5,13 +5,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
-    public static void main(String[] args) {
+    public  void connectDb() {
         String jdbcUrl = "jdbc:postgresql://localhost:5432/BotUsers";
         String username = "postgres";
         String password = "admin";
         try {
-            Connection connection = (Connection) DriverManager.getConnection(jdbcUrl, username, password);
-            System.out.println("Connected to database");
+            Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+            String sql = "";
             connection.close();
         } catch (SQLException e) {
             System.out.println("Error");
